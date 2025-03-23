@@ -3,3 +3,5 @@
 Create diagram scheme:
 
 ![schema](./img/schema.png)
+
+echo "POSTGRES_PASSWORD=mysecretpassword" > .env
