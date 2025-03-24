@@ -1,12 +1,12 @@
 """Models"""
+
 import uuid
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Table, Column, Integer, DateTime,  PrimaryKeyConstraint
+from sqlalchemy import Table, Column, Integer, DateTime, PrimaryKeyConstraint
 from sqlalchemy import func
-
 
 
 class Base(DeclarativeBase):
@@ -21,15 +21,21 @@ sub_m2m_teach = Table(
     PrimaryKeyConstraint("subject_id", "teacher_id"),
 )
 
+
 class Group(Base):
     """Group"""
+
     __tablename__ = "groups"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(nullable=False)
-    students: Mapped[list["Student"]] = relationship(back_populates="group", cascade="all, delete")
+    students: Mapped[list["Student"]] = relationship(
+        back_populates="group", cascade="all, delete"
+    )
+
 
 class Student(Base):
     """Studen class"""
+
     __tablename__ = "students"
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(nullable=False)
@@ -42,10 +48,11 @@ class Student(Base):
 
 class Teacher(Base):
     """Studen class"""
+
     __tablename__ = "teachers"
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(nullable=False)
-    last_name:Mapped[str] = mapped_column(default="")
+    last_name: Mapped[str] = mapped_column(default="")
     department: Mapped[str] = mapped_column(default="")
     subjects: Mapped[list["Subject"]] = relationship(
         secondary=sub_m2m_teach, back_populates="teachers"
@@ -54,6 +61,7 @@ class Teacher(Base):
 
 class Subject(Base):
     """Subject"""
+
     __tablename__ = "subjects"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(nullable=False)
@@ -62,19 +70,18 @@ class Subject(Base):
     )
     grades: Mapped[list["Grade"]] = relationship("Grade", back_populates="subject")
 
+
 class Grade(Base):
     """Grade for students and subjects"""
+
     __tablename__ = "grades"
     id: Mapped[int] = mapped_column(primary_key=True)
-    value:  Mapped[float] = mapped_column(default=0)
+    value: Mapped[float] = mapped_column(default=0)
     created_date: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()  # pylint: disable=not-callable
+        DateTime(timezone=True),
+        server_default=func.now(),  # pylint: disable=not-callable
     )
     student_id: Mapped[int] = mapped_column(ForeignKey("students.id"))
-    student: Mapped["Student"] = relationship(
-        "Student", back_populates="grades"
-    )
+    student: Mapped["Student"] = relationship("Student", back_populates="grades")
     subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id"))
-    subject: Mapped["Subject"] = relationship(
-        "Subject", back_populates="grades"
-    )
+    subject: Mapped["Subject"] = relationship("Subject", back_populates="grades")

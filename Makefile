@@ -7,3 +7,5 @@ migrate:
 
 sl:
 	python my_select.py
+f:
+	black . --exclude=venv

@@ -1,6 +1,7 @@
 """Create fake data in db"""
 
 from datetime import datetime, timedelta
+import random
 from faker import Faker
 from connect import session
 from models import Group, Student, Teacher, Subject, Grade
@@ -13,7 +14,7 @@ def make_fake_group() -> Group:
     """
     name
     """
-    group_name = fake.company()
+    group_name = f"Group: {fake.company()}"
     group = Group(name=group_name)
 
     return group
@@ -50,22 +51,20 @@ def make_fake_teacher() -> Teacher:
 
 def make_fake_subject() -> Subject:
     """
-    __tablename__ = "subjects"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    name:
     teachers: Mapped[list["Teacher"]] = relationship(
         secondary=sub_m2m_teach, back_populates="subjects"
     )
 
     """
-    fake_subject = f"{fake.word().capitalize()} {fake.word().capitalize()}"
+    fake_subject = f"Subject: {fake.word().capitalize()} {fake.word().capitalize()}"
     subject = Subject(name=fake_subject)
     return subject
 
 
 def make_fake_grade(std, sub) -> Grade:
     """
-        id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     value:  Mapped[float] = mapped_column(default=0)
     created_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()  # pylint: disable=not-callable
@@ -85,30 +84,43 @@ def make_fake_grade(std, sub) -> Grade:
 
 def fake_all():
     """Make fake case"""
-    std1, std2, std3 = make_fake_student(), make_fake_student(), make_fake_student()
+    students = call(make_fake_student, 15)
     group = make_fake_group()
-    teacher = make_fake_teacher()
-    sub1, sub2 = make_fake_subject(), make_fake_subject()
-    group.students = [std1, std2, std3]
-
+    group.students = students
     session.add(group)
-    teacher.subjects = [sub1, sub2]
-    session.add(teacher)
-    session.add_all([sub1, sub2])
+    teacher = call(make_fake_teacher, 2)
+    session.add_all(teacher)
+    subjects = call(make_fake_subject, 3)
+    session.add_all(subjects)
     session.commit()
-    session.add_all(
-        [
-            make_fake_grade(std1, sub1),
-            make_fake_grade(std2, sub1),
-            make_fake_grade(std3, sub1),
-            make_fake_grade(std1, sub2),
-            make_fake_grade(std2, sub2),
-            make_fake_grade(std3, sub2),
-        ]
-    )
+
+
+def add_fake_grades():
+    """Adding random fake grades"""
+    students = session.query(Student).all()
+    subjects = session.query(Subject).all()
+
+    for student in students:
+        for subject in subjects:
+            if random.choices([True, False]):
+                session.add(make_fake_grade(student, subject))
+    session.commit()
+
+
+def add_fake_rel_sub_teacher():
+    """Add fake rel with subjects for teacher"""
+    teachers = session.query(Teacher).all()
+    subjects = session.query(Subject).all()
+
+    for subject in subjects:
+        if random.choices([True, False]):
+            teachers_list = [teachers[random.randint(0, len(teachers) - 1)]]
+            subject.teachers = teachers_list
+    session.commit()
 
 
 if __name__ == "__main__":
-    call(fake_all, 100)
-    session.commit()
+    call(fake_all, 3)
+    call(add_fake_grades, 10)
+    call(add_fake_rel_sub_teacher, 2)
     session.close()
