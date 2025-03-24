@@ -4,7 +4,9 @@ from helpers import call
 from connect import session
 from models import Group, Student, Teacher, Subject, Grade
 from sqlalchemy import select
-
+import logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 def select_1():
     q = (
@@ -23,7 +25,7 @@ def select_1():
     return q
 
 
-def select_2(subject_name = "In Answer"):
+def select_2(subject_name = "Training Wait"):
     q = (
         session.execute(
             select(
@@ -33,9 +35,9 @@ def select_2(subject_name = "In Answer"):
                 Student.student_card_number,
                 Grade.value,
                 Subject.name
-            ).join(Grade).join(Subject)
+            ).select_from(Grade).join(Student, Grade.student_id == Student.id).join(Subject, Grade.subject_id == Subject.id)
             .filter(Subject.name == subject_name)
-        ).mappings().all()
+        ).all()
     )
     print(q)
     return q
