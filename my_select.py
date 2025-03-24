@@ -4,6 +4,7 @@ from helpers import call
 from connect import session
 from models import Group, Student, Teacher, Subject, Grade
 from sqlalchemy import select
+from sqlalchemy.sql import func
 import logging
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
@@ -44,7 +45,18 @@ def select_2(subject_name = "Training Wait"):
 
 
 def select_3():
-    pass
+    q = (
+        session.execute(
+            select(
+                Group.name,
+                func.avg(Grade.value)
+            ).select_from(Student).join(Group, Student.group_id == Group.id).join(Grade, Grade.student_id == Student.id).join(S)
+            .filter(Subject.name == subject_name)
+        ).all()
+    )
+    print(q)
+    return q
+
 
 
 def select_all():
